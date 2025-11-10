@@ -1,0 +1,22 @@
+FROM python:3.11-slim
+
+RUN apt update -y && \
+    apt install -y curl && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL https://ollama.com/install.sh | sh
+ARG MODEL_NAME=qwen2.5-coder:1.5b-instruct-q4_0
+
+# Add a script to pull the model
+RUN echo '#!/bin/sh\n\
+ollama serve > /dev/null 2>&1 &\n\
+sleep 10\n\
+ollama pull ${MODEL_NAME}\n\
+pkill ollama' > /pull_model.sh && \
+    chmod +x /pull_model.sh && \
+    /pull_model.sh && \
+    rm /pull_model.sh
+EXPOSE 11434
+
+CMD ["ollama", "serve"]
