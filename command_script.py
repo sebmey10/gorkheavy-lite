@@ -3,54 +3,79 @@ import json
 
 # These are the sockets of each container that I'm going to deploy.
 api_endpoints = {
-    "gemma": "http://127.0.0.1:11434/api/generate",
+    "promptimizer_granite": "http://127.0.0.1:11439/api/generate",
     "llama": "http://127.0.0.1:11435/api/generate",
     "qwen": "http://127.0.0.1:11436/api/generate",
-    "judge": "http://127.0.0.1:11437/api/generate"
+    "qwen_small": "http://127.0.0.1:11438/api/generate",
+    "judge": "http://127.0.0.1:11437/api/generate",
 }
 
 # These are the models I'm using to execute the workflow
 models = {
-    "gemma": "gemma3:1b",
+    "promptimizer": "granite4:350m",
     "llama": "llama3.2:1b-instruct-q4_0",
     "qwen": "qwen2.5-coder:1.5b-instruct-q4_0",
-    "judge": "gemma3:4b"
+    "qwen_small": "qwen3:0.6b",
+    "judge": "gemma3:1b"
 }
 
+def promptimizer(user_input):
+    promptimizer_prompt = f"""
+    Take {user_input} and rewrite it into a more concise query. The goal is to provide AI systems with a clear, 
+    focused prompt for optimal interpretation and response. Only respond with the re-written query."""
+
+    json_promptimizer = {
+        "model": models["promptimizer"],
+        "prompt": promptimizer_prompt,
+        "stream": False
+    }
+
+    try:
+        send_promptimizer = requests.post(api_endpoints["promptimizer_granite"], json= json_promptimizer)
+        send_promptimizer.raise_for_status()
+        response_promptimizer = send_promptimizer.json()
+        message_promptimizer = response_promptimizer["response"]
+
+    except requests.exceptions.RequestException as failed:
+        raise Exception(f"Didn't work: {str(failed)}")
+
+    return message_promptimizer
 
 
-gemma_logfile = []
 llama_logfile = []
 qwen_logfile = []
+qwen_small_logfile = []
 
 
 def send_message_models(user_input):
 
-    json_gemma = {
-        "model": models["gemma"],
-        "prompt": user_input,
+    optimized_prompt = promptimizer(user_input)
+
+    json_qwen_small = {
+        "model": models["qwen_small"],
+        "prompt": optimized_prompt,
         "stream": False
     }
     
     json_llama = {
         "model": models["llama"],
-        "prompt": user_input,
+        "prompt": optimized_prompt,
         "stream": False
     }
 
     json_qwen = {
         "model": models["qwen"],
-        "prompt": user_input,
+        "prompt": optimized_prompt,
         "stream": False
     }
 
 
     try:
-        send_gemma = requests.post(api_endpoints["gemma"], json=json_gemma)
-        send_gemma.raise_for_status()
-        response_gemma = send_gemma.json()
-        message_gemma = response_gemma["response"]
-        gemma_logfile.append({"role": "assistant", "content": message_gemma})
+        send_qwen_small = requests.post(api_endpoints["qwen_small"], json=json_qwen_small)
+        send_qwen_small.raise_for_status()
+        response_qwen_small = send_qwen_small.json()
+        message_qwen_small = response_qwen_small["response"]
+        qwen_small_logfile.append({"role": "assistant", "content": message_qwen_small})
 
         send_llama = requests.post(api_endpoints["llama"], json=json_llama)
         send_llama.raise_for_status()
@@ -65,7 +90,7 @@ def send_message_models(user_input):
         qwen_logfile.append({"role": "assistant", "content": message_qwen})
 
 
-        return gemma_logfile, llama_logfile, qwen_logfile
+        return message_qwen_small, message_llama, message_qwen
     
     except requests.exceptions.RequestException as failed:
         raise Exception(f"Didn't work: {str(failed)}")
@@ -76,7 +101,7 @@ def make_judgement(user_input):
     judge_prompt = f"""
     User query: {user_input}
 
-    Gemma answer: {gemma_logfile[-1]['content']}
+    qwen_small answer: {qwen_small_logfile[-1]['content']}
     LLaMA answer: {llama_logfile[-1]['content']}
     Qwen answer: {qwen_logfile[-1]['content']}
 
@@ -100,9 +125,11 @@ def make_judgement(user_input):
     
     except requests.exceptions.RequestException as failed:
         raise Exception(f"Didn't work: {str(failed)}")
-    
+
+print("Chatting with gorkheavy-lite! (type 'exit' to quit)")
+
 while True:
-    print("Chatting with gorkheavy-lite! (type 'exit' to quit)")
+
     user_input = input("YOU: ").strip()
 
     if user_input.lower() == "exit":
@@ -115,6 +142,3 @@ while True:
         print(f"Reply: {reply}\n")
     except Exception as failed:
         print(f"Error: {failed}")
-
-
-
