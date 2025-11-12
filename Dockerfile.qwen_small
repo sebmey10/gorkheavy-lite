@@ -6,17 +6,15 @@ RUN apt update -y && \
     rm -rf /var/lib/apt/lists/*
 
 RUN curl -fsSL https://ollama.com/install.sh | sh
-ARG MODEL_NAME=gemma3:1b
 
-# Add a script to pull the model
-RUN echo '#!/bin/sh\n\
-ollama serve > /dev/null 2>&1 &\n\
-sleep 10\n\
-ollama pull ${MODEL_NAME}\n\
-pkill ollama' > /pull_model.sh && \
-    chmod +x /pull_model.sh && \
-    /pull_model.sh && \
-    rm /pull_model.sh
+ENV MODEL_NAME=qwen3:0.6b
+
 EXPOSE 11434
 
-CMD ["ollama", "serve"]
+CMD ollama serve & \
+    sleep 10 && \
+    ollama pull $MODEL_NAME && \
+    wait
+
+
+
