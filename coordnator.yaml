@@ -1,0 +1,242 @@
+# AI Ensemble System for k3s
+# Deploy with: kubectl apply -f ai-ensemble.yaml
+
+---
+# Promptimizer (Granite 4 350m model)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: promptimizer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: promptimizer
+  template:
+    metadata:
+      labels:
+        app: promptimizer
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: DoesNotExist
+      containers:
+      - name: promptimizer
+        image: sebastein/ollama-promptimizer:v1.0
+        ports:
+        - containerPort: 11434
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "1.5Gi"
+            cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: promptimizer-service
+spec:
+  selector:
+    app: promptimizer
+  ports:
+  - port: 11434
+    targetPort: 11434
+  type: ClusterIP
+
+---
+# LLaMA 3.2 1B model
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llama
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llama
+  template:
+    metadata:
+      labels:
+        app: llama
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: DoesNotExist
+      containers:
+      - name: llama
+        image: sebastein/ollama-llama:v1.0
+        ports:
+        - containerPort: 11434
+        resources:
+          requests:
+            memory: "1.5Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llama-service
+spec:
+  selector:
+    app: llama
+  ports:
+  - port: 11434
+    targetPort: 11434
+  type: ClusterIP
+
+---
+# Qwen 2.5 Coder 1.5B model
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qwen
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qwen
+  template:
+    metadata:
+      labels:
+        app: qwen
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: DoesNotExist
+      containers:
+      - name: qwen
+        image: sebastein/ollama-qwen:v1.0
+        ports:
+        - containerPort: 11434
+        resources:
+          requests:
+            memory: "1.5Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qwen-service
+spec:
+  selector:
+    app: qwen
+  ports:
+  - port: 11434
+    targetPort: 11434
+  type: ClusterIP
+
+---
+# Qwen 3 0.6B model (smallest)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qwen-small
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qwen-small
+  template:
+    metadata:
+      labels:
+        app: qwen-small
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: DoesNotExist
+      containers:
+      - name: qwen-small
+        image: sebastein/ollama-qwen_small:v1.0
+        ports:
+        - containerPort: 11434
+        resources:
+          requests:
+            memory: "800Mi"
+            cpu: "300m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qwen-small-service
+spec:
+  selector:
+    app: qwen-small
+  ports:
+  - port: 11434
+    targetPort: 11434
+  type: ClusterIP
+
+---
+# Judge (Gemma 3 1B model)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: judge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: judge
+  template:
+    metadata:
+      labels:
+        app: judge
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: DoesNotExist
+      containers:
+      - name: judge
+        image: sebastein/ollama-judge:v1.0
+        ports:
+        - containerPort: 11434
+        resources:
+          requests:
+            memory: "1.5Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: judge-service
+spec:
+  selector:
+    app: judge
+  ports:
+  - port: 11434
+    targetPort: 11434
+  type: ClusterIP
