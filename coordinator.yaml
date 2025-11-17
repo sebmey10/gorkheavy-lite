@@ -271,7 +271,7 @@ spec:
                 operator: DoesNotExist
       containers:
       - name: orchestrator
-        image: ai-project:gorkheavy_script:v1.0
+        image: sebastein/gorkheavy_script:v1.0
         imagePullPolicy: Never
         stdin: true
         tty: true
