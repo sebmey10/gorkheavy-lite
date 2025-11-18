@@ -130,7 +130,7 @@ spec:
                 operator: DoesNotExist
       containers:
       - name: qwen
-        image: sebastein/ollama-qwen:v1.0
+        image: sebastein/ollama-qwen:v2.0
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 11434
