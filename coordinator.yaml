@@ -26,7 +26,7 @@ spec:
                 operator: DoesNotExist
       containers:
       - name: promptimizer
-        image: sebastein/ollama-promptimizer:v1.0
+        image: sebastein/promptimizer:v2
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 11434
@@ -78,7 +78,7 @@ spec:
                 operator: DoesNotExist
       containers:
       - name: llama
-        image: sebastein/ollama-llama:v1.0
+        image: sebastein/llama:v2
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 11434
@@ -182,7 +182,7 @@ spec:
                 operator: DoesNotExist
       containers:
       - name: qwen-small # Renamed from qwensmall
-        image: sebastein/ollama-qwen_small:v1.0
+        image: sebastein/qwen_small:v2
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 11434
@@ -234,7 +234,7 @@ spec:
                 operator: DoesNotExist
       containers:
       - name: judge
-        image: sebastein/ollama-judge:v1.0
+        image: sebastein/judge:v2
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 11434
@@ -286,7 +286,7 @@ spec:
                 operator: DoesNotExist
       containers:
       - name: orchestrator
-        image: sebastein/gorkheavy_script:v1.0
+        image: sebastein/gorkheavy_script:v2
         imagePullPolicy: Always
         stdin: true
         tty: true
