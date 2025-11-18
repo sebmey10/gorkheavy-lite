@@ -38,7 +38,7 @@ spec:
             memory: "1Gi"
             cpu: "500m"
           limits:
-            memory: "1.5Gi"
+            memory: "4Gi"
             cpu: "1000m"
 ---
 apiVersion: v1
@@ -90,7 +90,7 @@ spec:
             memory: "1.5Gi"
             cpu: "500m"
           limits:
-            memory: "2Gi"
+            memory: "4Gi"
             cpu: "1000m"
 ---
 apiVersion: v1
@@ -142,7 +142,7 @@ spec:
             memory: "1.5Gi"
             cpu: "500m"
           limits:
-            memory: "2Gi"
+            memory: "4Gi"
             cpu: "1000m"
 ---
 apiVersion: v1
@@ -194,7 +194,7 @@ spec:
             memory: "800Mi"
             cpu: "300m"
           limits:
-            memory: "1Gi"
+            memory: "4Gi"
             cpu: "500m"
 ---
 apiVersion: v1
@@ -246,7 +246,7 @@ spec:
             memory: "1.5Gi"
             cpu: "500m"
           limits:
-            memory: "2Gi"
+            memory: "4Gi"
             cpu: "1000m"
 ---
 apiVersion: v1
