@@ -8,10 +8,11 @@ RUN apt update -y && \
 RUN curl -fsSL https://ollama.com/install.sh | sh
 
 ENV MODEL_NAME=qwen3:0.6b
+ENV OLLAMA_HOST=0.0.0.0:11434
 
 EXPOSE 11434
 
-RUN echo '#!/bin/bash\nset -e\nollama serve &\nSERVER_PID=$!\nsleep 15\nollama pull $MODEL_NAME\nwait $SERVER_PID' > /entrypoint.sh && \
+RUN echo '#!/bin/bash\nset -e\nollama serve --host "${OLLAMA_HOST}" &\nSERVER_PID=$!\nsleep 15\nollama pull $MODEL_NAME\nwait $SERVER_PID' > /entrypoint.sh && \
     chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
