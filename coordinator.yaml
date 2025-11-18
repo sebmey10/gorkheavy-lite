@@ -41,10 +41,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: promptimizer
+  name: promptimizer-service
 spec:
   selector:
-    app: promptimizer
+    app: promptimizer-service
   ports:
   - port: 11434
     targetPort: 11434
@@ -90,10 +90,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: llama
+  name: llama-service
 spec:
   selector:
-    app: llama
+    app: llama-service
   ports:
   - port: 11434
     targetPort: 11434
@@ -139,10 +139,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: qwen
+  name: qwen-service
 spec:
   selector:
-    app: qwen
+    app: qwen-service
   ports:
   - port: 11434
     targetPort: 11434
@@ -188,10 +188,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: qwensmall
+  name: qwensmall-service
 spec:
   selector:
-    app: qwensmall
+    app: qwensmall-service
   ports:
   - port: 11434
     targetPort: 11434
@@ -237,10 +237,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: judge
+  name: judge-service
 spec:
   selector:
-    app: judge
+    app: judge-service
   ports:
   - port: 11434
     targetPort: 11434

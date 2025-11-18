@@ -3,11 +3,11 @@ import json
 
 # These are the sockets of each container that I'm going to deploy.
 api_endpoints = {
-    "promptimizer_granite": "http://promptimizer:11434/api/generate",
-    "llama": "http://llama:11434/api/generate",
-    "qwen": "http://qwen:11434/api/generate",
-    "qwen_small": "http://qwensmall:11434/api/generate",
-    "judge": "http://judge:11434/api/generate",
+    "promptimizer_granite": "http://promptimizer-service:11434/api/generate",
+    "llama": "http://llama-service:11434/api/generate",
+    "qwen": "http://qwen-service:11434/api/generate",
+    "qwen_small": "http://qwensmall-service:11434/api/generate",
+    "judge": "http://judge-service:11434/api/generate",
 }
 
 # These are the models I'm using to execute the workflow
