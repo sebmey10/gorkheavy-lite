@@ -12,4 +12,3 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY command_script.py .
 
 CMD ["python", "-u", "command_script.py"]
-
