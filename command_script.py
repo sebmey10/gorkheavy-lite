@@ -3,11 +3,11 @@ import json
 import time
 # These are the sockets of each container that I'm going to deploy.
 api_endpoints = {
-    "promptimizer_granite": "http://promptimizer-service:11434/api/generate",
-    "llama": "http://llama-service:11434/api/generate",
-    "qwen": "http://qwen-service:11434/api/generate",
-    "qwen_small": "http://qwen-small-service:11434/api/generate",
-    "judge": "http://judge-service:11434/api/generate",
+    "promptimizer": "http://promptimizer:11434/api/generate",
+    "llama": "http://llama:11434/api/generate",
+    "qwen": "http://qwen:11434/api/generate",
+    "qwen_small": "http://qwen-small:11434/api/generate",
+    "judge": "http://judge:11434/api/generate",
 }
 
 # These are the models I'm using to execute the workflow
@@ -31,7 +31,7 @@ def promptimizer(user_input):
     }
 
     try:
-        send_promptimizer = requests.post(api_endpoints["promptimizer_granite"], json= json_promptimizer)
+        send_promptimizer = requests.post(api_endpoints["promptimizer"], json= json_promptimizer)
         send_promptimizer.raise_for_status()
         response_promptimizer = send_promptimizer.json()
         message_promptimizer = response_promptimizer["response"]

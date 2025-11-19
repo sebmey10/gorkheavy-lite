@@ -1,9 +1,9 @@
 FROM python:3.11-slim
 
 # Install dependencies
-RUN apt update -y && \
-    apt install -y curl && \
-    apt clean && \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl tini && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Ollama
@@ -11,25 +11,21 @@ RUN curl -fsSL https://ollama.com/install.sh | sh
 
 # Environment Variables
 ENV MODEL_NAME=llama3.2:1b
-# This ENV is crucial so 'ollama pull' knows where to look
-ENV OLLAMA_HOST=0.0.0.0:11434 
+ENV OLLAMA_HOST=0.0.0.0:11434
 
 EXPOSE 11434
 
-# THE FIX: 
-# 1. Hardcoded 0.0.0.0 in the serve command to force external listening.
-# 2. Increased sleep to 10s (60 is okay too, but 10 is usually enough).
+# Create startup script
 RUN echo '#!/bin/bash\n\
 set -e\n\
 echo "Starting Ollama server..."\n\
-ollama serve --host 0.0.0.0:11434 &\n\
+ollama serve &\n\
 SERVER_PID=$!\n\
-echo "Waiting for server to start..."\n\
-sleep 10\n\
+sleep 15\n\
 echo "Pulling model: $MODEL_NAME"\n\
 ollama pull $MODEL_NAME\n\
-echo "Model pulled. Ready!"\n\
 wait $SERVER_PID' > /entrypoint.sh && \
     chmod +x /entrypoint.sh
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["/entrypoint.sh"]

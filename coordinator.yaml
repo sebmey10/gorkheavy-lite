@@ -40,11 +40,23 @@ spec:
           limits:
             memory: "4Gi"
             cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /api/tags
+            port: 11434
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/tags
+            port: 11434
+          initialDelaySeconds: 20
+          periodSeconds: 5
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: promptimizer-service
+  name: promptimizer
 spec:
   selector:
     app: promptimizer
@@ -92,11 +104,23 @@ spec:
           limits:
             memory: "4Gi"
             cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /api/tags
+            port: 11434
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/tags
+            port: 11434
+          initialDelaySeconds: 20
+          periodSeconds: 5
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: llama-service
+  name: llama
 spec:
   selector:
     app: llama
@@ -144,11 +168,23 @@ spec:
           limits:
             memory: "4Gi"
             cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /api/tags
+            port: 11434
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/tags
+            port: 11434
+          initialDelaySeconds: 20
+          periodSeconds: 5
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: qwen-service
+  name: qwen
 spec:
   selector:
     app: qwen
@@ -158,20 +194,20 @@ spec:
   type: ClusterIP
 
 ---
-# Qwen 3 0.6B model (Smallest) --- RENAMED SECTION BELOW
+# Qwen 3 0.6B model (Smallest)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: qwen-small # Renamed from qwensmall
+  name: qwen-small
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: qwen-small # Renamed from qwensmall
+      app: qwen-small
   template:
     metadata:
       labels:
-        app: qwen-small # Renamed from qwensmall
+        app: qwen-small
     spec:
       affinity:
         nodeAffinity:
@@ -181,7 +217,7 @@ spec:
               - key: node-role.kubernetes.io/control-plane
                 operator: DoesNotExist
       containers:
-      - name: qwen-small # Renamed from qwensmall
+      - name: qwen-small
         image: sebastein/qwen_small:v3.0
         imagePullPolicy: IfNotPresent
         ports:
@@ -196,14 +232,26 @@ spec:
           limits:
             memory: "4Gi"
             cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/tags
+            port: 11434
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/tags
+            port: 11434
+          initialDelaySeconds: 20
+          periodSeconds: 5
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: qwen-small-service # Renamed from qwensmall-service (THIS FIXES THE ERROR)
+  name: qwen-small
 spec:
   selector:
-    app: qwen-small # Renamed from qwensmall
+    app: qwen-small
   ports:
   - port: 11434
     targetPort: 11434
@@ -248,11 +296,23 @@ spec:
           limits:
             memory: "4Gi"
             cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /api/tags
+            port: 11434
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/tags
+            port: 11434
+          initialDelaySeconds: 20
+          periodSeconds: 5
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: judge-service
+  name: judge
 spec:
   selector:
     app: judge
@@ -284,6 +344,21 @@ spec:
             - matchExpressions:
               - key: node-role.kubernetes.io/control-plane
                 operator: DoesNotExist
+      restartPolicy: Always
+      initContainers:
+      - name: wait-for-services
+        image: curlimages/curl:latest
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for services to be ready..."
+          until curl -f http://promptimizer:11434/api/tags; do echo "Waiting for promptimizer..."; sleep 2; done
+          until curl -f http://llama:11434/api/tags; do echo "Waiting for llama..."; sleep 2; done
+          until curl -f http://qwen:11434/api/tags; do echo "Waiting for qwen..."; sleep 2; done
+          until curl -f http://qwen-small:11434/api/tags; do echo "Waiting for qwen-small..."; sleep 2; done
+          until curl -f http://judge:11434/api/tags; do echo "Waiting for judge..."; sleep 2; done
+          echo "All services ready!"
       containers:
       - name: orchestrator
         image: sebastein/gorkheavy_script:v3.0
