@@ -134,9 +134,11 @@ async def send_judge(session, user_input, qwen_small_answer, llama_answer, qwen_
     Choose the best answer based on correctness, completeness, clarity, and usefulness.
     Return the contents of the best answer, nothing else.
 
-    To reference context of the conversation you're having, reference {conversation_memory}.
+    To reference context of the conversation you're having, reference {context_memory}.
     """
 
+    context_memory = conversation_memory[-5:]
+      # Limit to last 10 messages for context
     json_judge = {
         "model": models["judge"],
         "prompt": judge_prompt,
