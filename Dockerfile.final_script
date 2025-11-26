@@ -8,8 +8,8 @@ WORKDIR /app
 # Install aiohttp for async HTTP requests
 RUN pip install --no-cache-dir aiohttp
 
-COPY opus_asyncio.py .
+COPY final_script.py .
 
 # Use tini for proper signal handling
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["python", "-u", "opus_asyncio.py"]
+CMD ["python", "-u", "final_script.py"]

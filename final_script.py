@@ -1,23 +1,22 @@
 import asyncio
 import aiohttp
 import json
-import gc 
 """gc.collect in order to clear unwanted memory when I want to."""
 
 # These are the sockets of each container that I'm going to deploy.
 api_endpoints = {
-    "promptimizer_granite": "http://promptimizer:11439/api/generate",
-    "llama": "http://127.0.0.1:11435/api/generate",
-    "qwen": "http://127.0.0.1:11436/api/generate",
-    "qwen_small": "http://127.0.0.1:11438/api/generate",
-    "judge": "http://127.0.0.1:11437/api/generate",
+    "promptimizer_granite": "http://promptimizer:11434/api/generate",
+    "llama": "http://llama:11434/api/generate",
+    "qwen": "http://qwen:11434/api/generate",
+    "qwen_small": "http://qwen-small:11434/api/generate",
+    "judge": "http://judge:11434/api/generate",
 }
 
 # These are the models I'm using to execute the workflow
 models = {
     "promptimizer": "granite4:350m",
-    "llama": "llama3.2:1b-instruct-q4_0",
-    "qwen": "qwen2.5-coder:1.5b-instruct-q4_0",
+    "llama": "llama3.2:1b",
+    "qwen": "qwen2.5-coder:1.5b",
     "qwen_small": "qwen3:0.6b",
     "judge": "gemma3:1b"
 }
@@ -189,7 +188,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-
-    

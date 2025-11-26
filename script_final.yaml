@@ -1,5 +1,5 @@
-# AI Ensemble System for k3s
-# Deploy with: kubectl apply -f ai-ensemble.yaml
+# AI Ensemble System for k3s - Opus Asyncio Orchestrator
+# Deploy with: kubectl apply -f opus_coordinator.yaml
 
 ---
 # Promptimizer (Granite 4 350m model)
@@ -16,6 +16,7 @@ spec:
     metadata:
       labels:
         app: promptimizer
+        ensemble: opus-ai-system
     spec:
       topologySpreadConstraints:
       - maxSkew: 1
@@ -23,7 +24,7 @@ spec:
         whenUnsatisfiable: DoNotSchedule
         labelSelector:
           matchLabels:
-            ensemble: ai-system
+            ensemble: opus-ai-system
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -90,7 +91,7 @@ spec:
     metadata:
       labels:
         app: llama
-        ensemble: ai-system
+        ensemble: opus-ai-system
     spec:
       topologySpreadConstraints:
       - maxSkew: 1
@@ -98,7 +99,7 @@ spec:
         whenUnsatisfiable: DoNotSchedule
         labelSelector:
           matchLabels:
-            ensemble: ai-system
+            ensemble: opus-ai-system
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -165,7 +166,7 @@ spec:
     metadata:
       labels:
         app: qwen
-        ensemble: ai-system
+        ensemble: opus-ai-system
     spec:
       topologySpreadConstraints:
       - maxSkew: 1
@@ -173,7 +174,7 @@ spec:
         whenUnsatisfiable: DoNotSchedule
         labelSelector:
           matchLabels:
-            ensemble: ai-system
+            ensemble: opus-ai-system
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -240,7 +241,7 @@ spec:
     metadata:
       labels:
         app: qwen-small
-        ensemble: ai-system
+        ensemble: opus-ai-system
     spec:
       topologySpreadConstraints:
       - maxSkew: 1
@@ -248,7 +249,7 @@ spec:
         whenUnsatisfiable: DoNotSchedule
         labelSelector:
           matchLabels:
-            ensemble: ai-system
+            ensemble: opus-ai-system
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -315,7 +316,7 @@ spec:
     metadata:
       labels:
         app: judge
-        ensemble: ai-system
+        ensemble: opus-ai-system
     spec:
       topologySpreadConstraints:
       - maxSkew: 1
@@ -323,7 +324,7 @@ spec:
         whenUnsatisfiable: DoNotSchedule
         labelSelector:
           matchLabels:
-            ensemble: ai-system
+            ensemble: opus-ai-system
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -376,21 +377,21 @@ spec:
   type: ClusterIP
 
 ---
-# Orchestrator (Gorkheavy)
+# Opus Asyncio Orchestrator
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: orchestrator
+  name: opus-orchestrator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: orchestrator
+      app: opus-orchestrator
   template:
     metadata:
       labels:
-        app: orchestrator
-        ensemble: ai-system
+        app: opus-orchestrator
+        ensemble: opus-ai-system
     spec:
       topologySpreadConstraints:
       - maxSkew: 1
@@ -398,7 +399,7 @@ spec:
         whenUnsatisfiable: DoNotSchedule
         labelSelector:
           matchLabels:
-            ensemble: ai-system
+            ensemble: opus-ai-system
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -414,9 +415,9 @@ spec:
         - sh
         - -c
         - |
-          echo "Waiting for services to be ready..."
+          echo "Waiting for AI model services to be ready..."
           
-          # Wait for services to respond
+          # Wait for all model services to respond
           until curl -f http://promptimizer:11434/api/tags 2>/dev/null; do 
             echo "Waiting for promptimizer..."; 
             sleep 5; 
@@ -442,12 +443,12 @@ spec:
             sleep 5; 
           done
           
-          echo "All services responding! Giving models 30s more to fully load..."
+          echo "All model services responding! Giving models 30s more to fully load..."
           sleep 30
-          echo "Ready to start orchestrator!"
+          echo "Ready to start opus asyncio orchestrator!"
       containers:
-      - name: orchestrator
-        image: sebastein/gorkheavy_script:v4.0
+      - name: final-script-orchestrator
+        image: sebastein/final_script:v2.0
         imagePullPolicy: Always
         stdin: true
         tty: true
@@ -458,3 +459,6 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
