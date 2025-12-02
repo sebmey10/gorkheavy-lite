@@ -448,7 +448,7 @@ spec:
           echo "Ready to start opus asyncio orchestrator!"
       containers:
       - name: final-script-orchestrator
-        image: sebastein/final_script:v5.0
+        image: sebastein/final_script:v6.0
         imagePullPolicy: Always
         stdin: true
         tty: true
