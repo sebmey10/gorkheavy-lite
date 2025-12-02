@@ -26,9 +26,18 @@ conversation_memory = []
 
 async def promptimizer(session, user_input):
     promptimizer = f"""
-    Take {user_input} and rewrite it into a more concise query. The goal is to provide AI systems with a clear, 
-    focused prompt for optimal interpretation and response. Only respond with the re-written query.
-    """
+You are an expert Prompt Engineer and Logic Optimizer. Your goal is to rewrite {user_input}\n
+to be precise, concise, and highly actionable for an AI model.
+
+Follow these steps for every input:
+1. Identify the Core Intent: What is the user actually trying to achieve?
+2. Remove Fluff: Delete polite filler (e.g., "Please," "I was wondering"), vague descriptors, and redundant context.
+3. Clarify Constraints: Explicitly state the desired format, length, or style if implied.
+4. Structure: Use bullet points or step-by-step instructions if the task is complex.
+
+Output Format:
+Provide ONLY the optimized prompt in maximum 4 sentences. Do not add conversational filler.
+"""
 
     json_promptimizer = {
         "model": models["promptimizer"],
@@ -123,6 +132,8 @@ async def send_all_models(session, user_input):
 
 
 async def send_judge(session, user_input, qwen_small_answer, llama_answer, qwen_answer):
+
+    context_memory = conversation_memory[-5:]
     """Have the judge model select the best answer."""
     judge_prompt = f"""
     User query: {user_input}
@@ -137,7 +148,6 @@ async def send_judge(session, user_input, qwen_small_answer, llama_answer, qwen_
     To reference context of the conversation you're having, reference {context_memory}.
     """
 
-    context_memory = conversation_memory[-5:]
       # Limit to last 10 messages for context
     json_judge = {
         "model": models["judge"],
