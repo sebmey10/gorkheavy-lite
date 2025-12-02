@@ -12,4 +12,5 @@ COPY final_script.py .
 
 # Use tini for proper signal handling
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["python", "-u", "final_script.py", "--mode", "http"]
+# Keep container running so we can kubectl exec into it
+CMD ["sleep", "infinity"]
