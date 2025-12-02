@@ -391,7 +391,7 @@ spec:
     metadata:
       labels:
         app: orchestrator
-        ensemble: ai-system
+        ensemble: opus-ai-system
     spec:
       topologySpreadConstraints:
       - maxSkew: 1
@@ -399,7 +399,7 @@ spec:
         whenUnsatisfiable: DoNotSchedule
         labelSelector:
           matchLabels:
-            ensemble: ai-system
+            ensemble: opus-ai-system
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
