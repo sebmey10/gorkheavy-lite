@@ -159,58 +159,29 @@ async def send_judge(session, user_input, qwen_small_answer, llama_answer, qwen_
     
 
 async def main():
+
     print("You now have the pleasure of speaking with Gork,\n" \
     "the world's closest attempt to AGI.\n" \
     "Type 'exit' to quit.")
-    sys.stdout.flush()
 
     async with aiohttp.ClientSession() as session:
         while True:
 
+            user_input = await asyncio.get_event_loop().run_in_executor(
+                None, lambda: input("YOU: ")
+            )
+
+            if user_input.lower() == "exit":
+                break
+
             try:
-                print("YOU: ", end="", flush=True)
-                
-                # Check if stdin is available (interactive mode)
-                if sys.stdin.isatty():
-                    user_input = await asyncio.get_running_loop().run_in_executor(
-                        None, sys.stdin.readline
-                    )
-                else:
-                    # In Kubernetes without a TTY, wait for input with timeout
-                    try:
-                        user_input = await asyncio.wait_for(
-                            asyncio.get_running_loop().run_in_executor(None, sys.stdin.readline),
-                            timeout=60.0
-                        )
-                    except asyncio.TimeoutError:
-                        print("No input received. Waiting...")
-                        await asyncio.sleep(5)
-                        continue
-                
-                # Handle EOF (empty string means EOF)
-                if not user_input:
-                    print("\nNo input received (EOF). Keeping pod alive...")
-                    await asyncio.sleep(30)
-                    continue
-                
-                user_input = user_input.strip()
-                
-                if not user_input:
-                    continue
-
-                if user_input.lower() == "exit":
-                    break
-
                 qwen_small_response, qwen_response, llama_response = await send_all_models(session, user_input)
                 reply = await send_judge(session, user_input, qwen_small_response, llama_response, qwen_response)
 
                 print(f"Reply: {str(reply)}")
-                sys.stdout.flush()
 
             except Exception as failed:
                 print(f"Error {failed}")
-                sys.stdout.flush()
-                await asyncio.sleep(5)
 
 
 if __name__ == "__main__":
