@@ -1,6 +1,22 @@
-# AI Ensemble System for k3s - Opus Asyncio Orchestrator
-# Deploy with: kubectl apply -f opus_coordinator.yaml
-
+# AI Ensemble System for k3s - Gork AI Orchestrator
+#
+# This deploys a multi-model AI ensemble system that uses:
+# - Promptimizer (Granite 4 350m) - optimizes user queries
+# - LLaMA 3.2 1B - generates responses
+# - Qwen 2.5 Coder 1.5B - generates responses
+# - Qwen 3 0.6B - generates responses
+# - Judge (Gemma 3 1B) - selects best response
+#
+# Deploy with: kubectl apply -f script_final.yaml
+#
+# To interact with the orchestrator:
+# 1. Find the pod: kubectl get pods | grep orchestrator
+# 2. Attach to it: kubectl attach -it <orchestrator-pod-name>
+# 3. Type your questions and press Enter
+# 4. Type 'exit' to quit
+#
+# To view logs: kubectl logs -f <orchestrator-pod-name>
+#
 ---
 # Promptimizer (Granite 4 350m model)
 apiVersion: apps/v1
@@ -407,7 +423,6 @@ spec:
             - matchExpressions:
               - key: node-role.kubernetes.io/control-plane
                 operator: DoesNotExist
-      restartPolicy: Always
       initContainers:
       - name: wait-for-services
         image: curlimages/curl:latest

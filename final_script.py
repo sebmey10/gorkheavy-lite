@@ -1,6 +1,9 @@
 import asyncio
 import aiohttp
 import sys
+import signal
+import os
+from datetime import datetime
 
 # These are the sockets of each container that I'm going to deploy.
 api_endpoints = {
@@ -23,6 +26,18 @@ models = {
 # Note: We're using lists instead of appending to maintain conversation history
 
 conversation_memory = []
+shutdown_flag = False
+
+def log(message):
+    """Log with timestamp for better debugging in container logs"""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{timestamp}] {message}", flush=True)
+
+def handle_shutdown(signum, frame):
+    """Handle shutdown signals gracefully"""
+    global shutdown_flag
+    log(f"Received signal {signum}, initiating graceful shutdown...")
+    shutdown_flag = True
 
 
 async def promptimizer(session, user_input):
@@ -47,15 +62,16 @@ Provide ONLY the optimized prompt in maximum 4 sentences. Do not add conversatio
     }
 
     try:
+        log("Sending prompt to promptimizer for optimization...")
         async with session.post(api_endpoints["promptimizer"], json=json_promptimizer) as response:
             response.raise_for_status()
             data = await response.json()
             message = data["response"]
             conversation_memory.append({"role": "promptimizer", "content": message})
-
+            log("Promptimizer optimization complete")
             return message
     except aiohttp.ClientError as f:
-        print(f"Promptimizer failed: {f}")
+        log(f"Promptimizer failed: {f}, using original input")
         return user_input
     
 
@@ -118,6 +134,7 @@ async def send_llama(session, prompt):
 async def send_all_models(session, user_input):
 
     optimized_prompt = await promptimizer(session, user_input)
+    log("Sending optimized prompt to all models (qwen_small, qwen, llama) in parallel...")
 
     send = await asyncio.gather(
         send_qwen_small(session, optimized_prompt),
@@ -129,7 +146,8 @@ async def send_all_models(session, user_input):
     for s in send:
         if isinstance(s, Exception):
             raise s
-    
+
+    log("All models have responded")
     return send[0], send[1], send[2]
 
 
@@ -159,46 +177,116 @@ async def send_judge(session, user_input, qwen_small_answer, llama_answer, qwen_
 
 
     try:
+        log("Sending all responses to judge for final selection...")
         async with session.post(api_endpoints["judge"], json = json_judge) as jud:
             jud.raise_for_status()
             data = await jud.json()
             response = data["response"]
             conversation_memory.append({"role":"judge", "content": response})
+            log("Judge has selected the best response")
             return str(response)
-        
+
     except aiohttp.ClientError as e:
         raise Exception(f"Failed at judge: {e}")
     
 
-async def main():
+async def read_input_with_timeout(prompt_text, timeout=30):
+    """Read input with timeout to prevent hanging in containerized environments"""
+    try:
+        # Check if stdin is actually a TTY and connected
+        if not sys.stdin.isatty():
+            log("Warning: stdin is not a TTY, input may not work as expected")
 
-    print("You now have the pleasure of speaking with Gork,\n" \
-    "the world's closest attempt to AGI.\n" \
-    "Type 'exit' to quit.")
+        print(prompt_text, end="", flush=True)
+
+        # Use a timeout to prevent indefinite hanging
+        user_input = await asyncio.wait_for(
+            asyncio.get_event_loop().run_in_executor(None, sys.stdin.readline),
+            timeout=timeout
+        )
+        return user_input
+    except asyncio.TimeoutError:
+        return None
+    except Exception as e:
+        log(f"Error reading input: {e}")
+        return None
+
+
+async def main():
+    global shutdown_flag
+
+    # Register signal handlers for graceful shutdown
+    signal.signal(signal.SIGTERM, handle_shutdown)
+    signal.signal(signal.SIGINT, handle_shutdown)
+
+    log("=" * 60)
+    log("Gork AI Ensemble Orchestrator Starting")
+    log("=" * 60)
+    log(f"Python version: {sys.version}")
+    log(f"stdin is TTY: {sys.stdin.isatty()}")
+    log(f"stdin is connected: {not sys.stdin.closed}")
+
+    # Check environment for test mode
+    test_mode = os.environ.get("TEST_MODE", "").lower() == "true"
+    if test_mode:
+        log("Running in TEST MODE")
+
+    log("\nYou now have the pleasure of speaking with Gork,")
+    log("the world's closest attempt to AGI.")
+    log("Type 'exit' to quit.\n")
+
+    # Test all services are reachable
+    log("Testing connectivity to AI model services...")
+    async with aiohttp.ClientSession() as test_session:
+        for service_name, endpoint in api_endpoints.items():
+            try:
+                # Just check the base URL is reachable
+                base_url = endpoint.replace("/api/generate", "/api/tags")
+                async with test_session.get(base_url, timeout=aiohttp.ClientTimeout(total=5)) as resp:
+                    if resp.status == 200:
+                        log(f"✓ {service_name} is reachable")
+                    else:
+                        log(f"⚠ {service_name} returned status {resp.status}")
+            except Exception as e:
+                log(f"✗ {service_name} is not reachable: {e}")
+
+    log("\nOrchestrator ready! Waiting for input...")
+    log("(In Kubernetes, use: kubectl attach -it <pod-name>)\n")
     sys.stdout.flush()
 
     async with aiohttp.ClientSession() as session:
-        while True:
+        last_activity = datetime.now()
 
+        while not shutdown_flag:
             try:
-                print("YOU: ", end="", flush=True)
-                user_input = await asyncio.get_event_loop().run_in_executor(
-                    None, sys.stdin.readline
-                )
-                
-                # Handle EOF (empty string means EOF)
-                if not user_input:
-                    print("\nNo input received (EOF). Waiting for input...")
-                    await asyncio.sleep(5)
+                # Send periodic keepalive message
+                elapsed = (datetime.now() - last_activity).total_seconds()
+                if elapsed > 60:
+                    log(f"Orchestrator is alive and waiting for input... (uptime: {int(elapsed)}s)")
+                    last_activity = datetime.now()
+
+                # Try to read input with timeout
+                user_input = await read_input_with_timeout("YOU: ", timeout=30)
+
+                # Handle various input scenarios
+                if user_input is None:
+                    # Timeout or error - just continue
+                    await asyncio.sleep(1)
                     continue
-                
+
+                if not user_input or user_input.strip() == "":
+                    # Empty input
+                    await asyncio.sleep(1)
+                    continue
+
                 user_input = user_input.strip()
-                
-                if not user_input:
-                    continue
+                last_activity = datetime.now()
 
                 if user_input.lower() == "exit":
+                    log("Exit command received, shutting down...")
                     break
+
+                log(f"Received input: {user_input}")
 
                 # Add user input to memory so the judge has context
                 conversation_memory.append({"role": "user", "content": user_input})
@@ -210,15 +298,29 @@ async def main():
                 qwen_small_response, qwen_response, llama_response = await send_all_models(session, user_input)
                 reply = await send_judge(session, user_input, qwen_small_response, llama_response, qwen_response)
 
-                print(f"Reply: {str(reply)}")
-                sys.stdout.flush()
+                print(f"\nGORK: {str(reply)}\n", flush=True)
+                log("Response delivered successfully")
 
             except Exception as failed:
-                print(f"Error {failed}")
-                sys.stdout.flush()
+                log(f"Error processing request: {failed}")
+                import traceback
+                log(f"Traceback: {traceback.format_exc()}")
+                await asyncio.sleep(1)
+
+    log("Orchestrator shutting down gracefully...")
+    log("Goodbye!")
 
                 
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        log("Starting Gork AI Orchestrator...")
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        log("Received keyboard interrupt, shutting down...")
+    except Exception as e:
+        log(f"Fatal error: {e}")
+        import traceback
+        log(f"Traceback: {traceback.format_exc()}")
+        sys.exit(1)
