@@ -452,6 +452,7 @@ spec:
         imagePullPolicy: Always
         stdin: true
         tty: true
+        command: ["python", "/app/final_script.py"]
         resources:
           requests:
             memory: "128Mi"
