@@ -1,7 +1,6 @@
 import asyncio
 import aiohttp
 import sys
-from aiohttp import web
 
 # These are the sockets of each container that I'm going to deploy.
 api_endpoints = {
@@ -171,69 +170,8 @@ async def send_judge(session, user_input, qwen_small_answer, llama_answer, qwen_
         raise Exception(f"Failed at judge: {e}")
     
 
-async def process_query(user_input: str) -> str:
-    """Process a user query through the AI ensemble."""
-    global conversation_memory
-    
-    async with aiohttp.ClientSession() as session:
-        # Add user input to memory so the judge has context
-        conversation_memory.append({"role": "user", "content": user_input})
+async def main():
 
-        # Keep memory small (rolling window of last 20 messages)
-        if len(conversation_memory) > 20:
-            conversation_memory = conversation_memory[-20:]
-
-        qwen_small_response, qwen_response, llama_response = await send_all_models(session, user_input)
-        reply = await send_judge(session, user_input, qwen_small_response, llama_response, qwen_response)
-        
-        return str(reply)
-
-
-async def handle_query(request):
-    """HTTP handler for /query endpoint."""
-    try:
-        data = await request.json()
-        user_input = data.get("prompt", "")
-        
-        if not user_input:
-            return web.json_response({"error": "No prompt provided"}, status=400)
-        
-        reply = await process_query(user_input)
-        return web.json_response({"response": reply})
-    
-    except Exception as e:
-        return web.json_response({"error": str(e)}, status=500)
-
-
-async def handle_health(request):
-    """Health check endpoint."""
-    return web.json_response({"status": "ok"})
-
-
-async def run_http_server():
-    """Run the HTTP server."""
-    app = web.Application()
-    app.router.add_post("/query", handle_query)
-    app.router.add_get("/health", handle_health)
-    
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", 8080)
-    await site.start()
-    
-    print("Orchestrator HTTP server started on port 8080")
-    print("POST /query with JSON body: {\"prompt\": \"your question\"}")
-    sys.stdout.flush()
-    
-    # Keep the server running
-    while True:
-        await asyncio.sleep(3600)
-
-
-async def run_interactive():
-    """Run the interactive CLI mode."""
-    global conversation_memory
-    
     print("You now have the pleasure of speaking with Gork,\n" \
     "the world's closest attempt to AGI.\n" \
     "Type 'exit' to quit.")
@@ -241,6 +179,7 @@ async def run_interactive():
 
     async with aiohttp.ClientSession() as session:
         while True:
+
             try:
                 print("YOU: ", end="", flush=True)
                 user_input = await asyncio.get_event_loop().run_in_executor(
@@ -278,19 +217,8 @@ async def run_interactive():
                 print(f"Error {failed}")
                 sys.stdout.flush()
 
-
-def main():
-    import argparse
-    parser = argparse.ArgumentParser(description="AI Ensemble Orchestrator")
-    parser.add_argument("--mode", choices=["http", "interactive"], default="http",
-                        help="Run mode: 'http' for HTTP server (default), 'interactive' for CLI")
-    args = parser.parse_args()
-    
-    if args.mode == "http":
-        asyncio.run(run_http_server())
-    else:
-        asyncio.run(run_interactive())
+                
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
