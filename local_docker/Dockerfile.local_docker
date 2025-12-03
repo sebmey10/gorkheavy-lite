@@ -1,0 +1,17 @@
+FROM --platform=linux/amd64 python:3.11-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends curl tini && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY local_docker.py .
+
+# Use tini for proper signal handling
+ENTRYPOINT ["/usr/bin/tini", "--"]
+# Run the Python script
+CMD ["python", "-u", "final_script.py"]
