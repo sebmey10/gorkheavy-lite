@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  promptimizer:
+    image: sebastein/promptimizer:v5.0
+    container_name: gork-promptimizer
+    ports:
+      - "11434:11434"
+    volumes:
+      - promptimizer-data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_KEEP_ALIVE=-1
+    command: serve
+
+  llama:
+    image: sebastein/llama:v5.0
+    container_name: gork-llama
+    ports:
+      - "11435:11434"
+    volumes:
+      - llama-data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_KEEP_ALIVE=-1
+    command: serve
+
+  qwen:
+    image: sebastein/qwen:v5.0
+    container_name: gork-qwen
+    ports:
+      - "11436:11434"
+    volumes:
+      - qwen-data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_KEEP_ALIVE=-1
+    command: serve
+
+  qwen-small:
+    image: sebastein/qwen_small:v5.0
+    container_name: gork-qwen-small
+    ports:
+      - "11437:11434"
+    volumes:
+      - qwen-small-data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_KEEP_ALIVE=-1
+    command: serve
+
+  judge:
+    image: sebastein/judge:v5.0
+    container_name: gork-judge
+    ports:
+      - "11438:11434"
+    volumes:
+      - judge-data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_KEEP_ALIVE=-1
+    command: serve
+
+  gork-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.local_docker
+    container_name: gork-orchestrator
+    depends_on:
+      - promptimizer
+      - llama
+      - qwen
+      - qwen-small
+      - judge
+    network_mode: host
+    stdin_open: true
+    tty: true
+
+volumes:
+  promptimizer-data:
+  llama-data:
+  qwen-data:
+  qwen-small-data:
+  judge-data:
