@@ -2,6 +2,9 @@ import asyncio
 import aiohttp
 import sys
 import logging
+import csv
+import os
+import hashlib
 
 # Set up basic logging
 logging.basicConfig(
