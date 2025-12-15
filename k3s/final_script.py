@@ -29,8 +29,64 @@ models = {
     "llama": "llama3.2:1b",
     "qwen": "qwen2.5-coder:1.5b",
     "qwen_small": "qwen3:0.6b",
-    "judge": "gemma3:1b"
+    "judge": "gemma3:1b",
+    "Devstral-Small-2-24B-Instruct-2512-UD-Q5_K_XL": "Devstral-Small-2-24B-Instruct-2512-UD-Q5_K_XL",
+    "EXAONE-4.0-32B-Q4_K_M": "EXAONE-4.0-32B-Q4_K_M",
+    "LFM2-1.2B-Extract-Q8_0": "LFM2-1.2B-Extract-Q8_0",
+    "LFM2-1.2B-RAG-Q8_0": "LFM2-1.2B-RAG-Q8_0",
+    "LFM2-1.2B-Tool-Q8_0": "LFM2-1.2B-Tool-Q8_0",
+    "Olmo-3-7B-Instruct-Q8_0": "Olmo-3-7B-Instruct-Q8_0",
+    "Olmo-3-7B-Think-Q8_0": "Olmo-3-7B-Think-Q8_0",
+    "gemma-3-27b-it-Q6_K": "gemma-3-27b-it-Q6_K",
+    "gemma3-12b-Q6_K": "gemma3-12b-Q6_K",
+    "gpt-oss-120b-F16": "gpt-oss-120b-F16",
+    "gpt-oss-20b-F16": "gpt-oss-20b-F16",
+    "granite-3.2-8b-instruct-f16": "granite-3.2-8b-instruct-f16",
+    "llama3.1-8B-Q8_0": "llama3.1-8B-Q8_0",
+    "mistral3.2-24B-Q6_K": "mistral3.2-24B-Q6_K",
 }
+
+
+# Experiment model list (keys reused from models dict)
+EXPERIMENT_MODEL_NAMES = [
+    "Devstral-Small-2-24B-Instruct-2512-UD-Q5_K_XL",
+    "EXAONE-4.0-32B-Q4_K_M",
+    "LFM2-1.2B-Extract-Q8_0",
+    "LFM2-1.2B-RAG-Q8_0",
+    "LFM2-1.2B-Tool-Q8_0",
+    "Olmo-3-7B-Instruct-Q8_0",
+    "Olmo-3-7B-Think-Q8_0",
+    "gemma-3-27b-it-Q6_K",
+    "gemma3-12b-Q6_K",
+    "gpt-oss-120b-F16",
+    "gpt-oss-20b-F16",
+    "granite-3.2-8b-instruct-f16",
+    "llama3.1-8B-Q8_0",
+    "mistral3.2-24B-Q6_K",
+]
+
+
+# Fixed 10-category taxonomy for networking prompts
+CATEGORY_LABELS = [
+    "TROUBLESHOOTING",
+    "CONFIG_GENERATION",
+    "SECURITY_INCIDENT",
+    "PERFORMANCE_OPTIMIZATION",
+    "NETWORK_DESIGN_ARCH",
+    "MONITORING_OBSERVABILITY",
+    "AUTOMATION_INTEGRATION",
+    "DOCUMENTATION_SUMMARY",
+    "CUSTOMER_SUPPORT_COMMS",
+    "ON_PREM_DEVICE_SPECIFICS",
+]
+
+CATEGORY_LABEL_SET = set(CATEGORY_LABELS)
+
+
+# Experiment file/endpoint configuration (not used yet)
+RESULTS_CSV_PATH = os.getenv("RESULTS_CSV_PATH", "results.csv")
+PROMPTS_CSV_PATH = os.getenv("PROMPTS_CSV_PATH", "prompts.csv")
+TEST_MODEL_ENDPOINT = os.getenv("TEST_MODEL_ENDPOINT", api_endpoints["llama"])
 
 
 async def promptimizer(session, user_input):
