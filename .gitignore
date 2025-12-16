@@ -1,0 +1,35 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+.env/
+.envrc
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Logs and local data
+*.log
+*.pid
+
+# OS-specific junk
+.DS_Store
+Thumbs.db
+
+# Editor/IDE settings
+.vscode/
+.idea/
+*.code-workspace
+
+# Local Docker and K8s artifacts (if any get generated)
+*.tar
+*.img
+
+# Git
+.git/
