@@ -2,7 +2,7 @@ import asyncio
 import aiohttp
 import sys
 import logging
-import ollama
+from typing import TypeVar, Dict, List, Any
 from ollama import chat, ChatResponse
 
 # FLOW OVERVIEW (numbered in execution order)
@@ -21,7 +21,7 @@ from ollama import chat, ChatResponse
  
  # Note: Fix statelessness of LLM's at end of script
 
- # Getting the flow
+T = TypeVar("T") # <- generic type for now
 
 # 2) Logging setup happens at import-time (before main())
 logging.basicConfig(
@@ -80,35 +80,36 @@ CANDIDATE_KEYS = [i for i in models.keys() if i not in OTHER_KEYS]
 #   "stream": false
 # } <- response structure. This grows as conversation grows. User sends something, LLM sends back. The ONLY way the LLM knows is via the repsonse, it does not hold context. Right now our models are stateless
 
-def build_payload(model_key: str,*,messages: list[dict[str, str]], keep_alive: int = -1) -> dict:  # Note * is key=value or name=value type hint, messages are in "messages": [{"role": "user", "content":prompt_text}] format, int default is -1
-    """
-    Build the exact JSON body sent to /v1/chat/completions.
 
-    note: the `*` means `messages=` and `keep_alive=` must be passed by keyword (similar to **kwargs but for type hints, non compulsory).
-    """
-    
-    return {
-        "model": models[model_key],
-        "messages": messages,
-        "keep_alive": keep_alive,
-    }
 
 # 3.3) NOTE: The next two defs are placeholders/stubs right now.
 #      They are not part of the current running flow because:
 #      - call_model() is incomplete and will syntax-error if executed
 #      - send_all_models() is defined later again (that later one is used)
 
-# I'll use build payload within initial model call
-async def call_model(session: aiohttp.ClientSession ):
-    "Generic model caller for scalable response per what we put in models (dict)"
-# Key for all models setup here
-    for key in CANDIDATE_KEYS:
-        payload = build_payload(key,messages=[{"role": "user", "content":}])
-    async with session.post(ollama_endpoint,json=) # Put the different jsons in this structure
+# I'll use build payload within initial model call. Generic sending to all models FROM Promptimizer
+async def call_model(session: aiohttp.ClientSession, model_key: str, prompt: str) -> str: # Return the "content" we get back
+    payload = {
+        "model": models[model_key],
+        "messages": [{"role": "user", "content": prompt}],
+        "keep_alive": -1,
+        }
+    async with session.post(ollama_endpoint, json=payload) as response:
+        response.raise_for_status()
+        generic_data: dict[str, Any] = await response.json()
+        return generic_data["choices"][0]["message"]["content"]
 
-def send_all_models():
-    pass
 
+async def call_all_models(session: aiohttp.ClientSession, prompt: str) -> dict[str, str]:
+    tasks = [call_model(session, key, prompt) for key in CANDIDATE_KEYS]
+    results = await asyncio.gather(*tasks, return_exceptions=True) # Unpacks all the model generic_data["choices"][0]["message"]["content"], AND gathers them
+
+    out = {}
+    for key, r in zip(CANDIDATE_KEYS, results):
+        if isinstance(r, Exception):
+            raise r
+        out[key] = r
+    return out
 
 async def promptimizer(session, user_input):
     # 7) Step: Promptimizer
@@ -129,7 +130,7 @@ IMPORTANT: Tell models that they have to give a concise response.
  
 OUTPUT: Return ONLY the optimized prompt with no preamble, explanation, or meta-commentary."""
  
-    # 7.2) Build JSON payload for promptimizer
+    # 7.2) Build JSON payload for promptimizer, will be replaced by "build payload"
     json_promptimizer = {
         "model": models["promptimizer"],
         "messages": [{"role": "user", "content":prompt_text}],
@@ -224,30 +225,6 @@ async def send_llama(session, prompt):
         raise Exception(f"Failed at llama: {e}")
    
  
-async def send_all_models(session, user_input):
-    # 8) Step: run all candidate models concurrently
-    # 8.0) First optimize the prompt (one time)
-    logger.info("Start gather")
-   
-    optimized_prompt = await promptimizer(session, user_input)
- 
-    # 8.1) Then gather candidate outputs concurrently
-    send = await asyncio.gather(
-        send_qwen_small(session, optimized_prompt),
-        send_qwen(session, optimized_prompt),
-        send_llama(session, optimized_prompt),
-        return_exceptions = True
-    )
- 
-    # 8.2) If any candidate returned an Exception, raise it
-    for i, s in enumerate(send):
-        if isinstance(s, Exception):
-            logger.error(f"Model {i} returned error: {s}")
-            raise s
-   
-    # 8.3) Return responses in the same order they were gathered
-    logger.info("Gather worked")
-    return send[0], send[1], send[2]
  
  
 async def send_judge(session, user_input, qwen_small_answer, llama_answer, qwen_answer):
