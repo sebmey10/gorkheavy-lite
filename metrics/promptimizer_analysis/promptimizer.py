@@ -39,16 +39,16 @@ def _is_tensor_error_text(err_text: str) -> bool:
     t = (err_text or "").strip()
     if not t:
         return False
-    return any(p.search(t) is not None for p in _TENSOR_FATAL_PATTERNS)
+    return any(p.search(t) is not None for p in _TENSOR_FATAL_PATTERNS) # p = pattern in Tensor_Patterns, t = text matched to, returns None if no pattern 
 
 # ---- Self-contained backend call helper (OpenAI-compatible /v1/chat/completions) ----
 # No imports from this repo; only stdlib + pip packages.
-DEFAULT_ENDPOINT = os.environ.get("OPENAI_COMPAT_ENDPOINT", "http://hal.kub.org:8080/v1/chat/completions").strip()
+DEFAULT_ENDPOINT = os.environ.get("OPENAI_COMPAT_ENDPOINT", "http://hal.kub.org:8080/v1/chat/completions").strip() # Dynamic for throwing in an environment var later, probably should do that so we don't get clapped
 
 # Role aliases (override via env vars). If you pass a literal model id, it is used as-is.
-MODEL_ALIASES: Dict[str, str] = {
+MODEL_ALIASES: Dict[str, str] = { # Allows us to interchange models as needed for easy use
     "promptimizer": os.environ.get("PROMPTIMIZER_MODEL", "Olmo-3-7B-Instruct-Q8_0").strip(),
-    "judge": os.environ.get("JUDGE_MODEL", "granite-3.2-8b-instruct-f16").strip(),
+    "judge": os.environ.get("JUDGE_MODEL", "gpt-oss-120b-F16").strip(), # old model was granite-3.2-8b-instruct-f16 <- could impact judge ratings. Run more to see if new winner emerges with oss-120b
 }
 
 
@@ -161,6 +161,7 @@ _FLAT_CSV_FIELDNAMES = [
     "LLM_with_promptimizer_response",
     "optimized_prompt",
     "Judge response",
+    "Judge_model",
 ]
 
 # -------------------------
@@ -1006,6 +1007,7 @@ class FreshResultsStore:
                     "LLM_with_promptimizer_response": _csv_sanitize(resp1),
                     "optimized_prompt": _csv_sanitize(optimized_prompt),
                     "Judge response": _csv_sanitize(judge_resp),
+                    "Judge_model": _resolve_model_id("judge"),
                 }
                 w.writerow(out_row)
 
@@ -1161,7 +1163,7 @@ class Prompt:
 # -------------------------
 # Config
 # -------------------------
-SAMPLE_SIZE_DEFAULT = 15
+SAMPLE_SIZE_DEFAULT = 30
 SAMPLE_SEED_DEFAULT = 0
 SAMPLE_WITH_REPLACEMENT_DEFAULT = False
 
@@ -1621,7 +1623,7 @@ async def run_all_prompts_one_go(
                     )
             except Exception as e:
                 msg = str(e) or repr(e)
-                if _is_tensor_error_text(msg):
+                if _is_tensor_error_text(msg): # Passed in from err_text
                     raise FatalBackendError(msg) from e
                 raise
             return _normalize_text_aggressive(out, model_name=model_name)
