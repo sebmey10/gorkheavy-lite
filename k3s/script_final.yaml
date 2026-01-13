@@ -21,7 +21,7 @@ spec:
       topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: DoNotSchedule
+        whenUnsatisfiable: ScheduleAnyway
         labelSelector:
           matchLabels:
             ensemble: opus-ai-system
@@ -43,16 +43,16 @@ spec:
           value: "0.0.0.0"
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "300m"
+            memory: "256Mi"
+            cpu: "100m"
           limits:
-            memory: "1.5Gi"
-            cpu: "800m"
+            memory: "4Gi"
+            cpu: "1000m"
         livenessProbe:
           httpGet:
             path: /api/tags
             port: 11434
-          initialDelaySeconds: 60
+          initialDelaySeconds: 120
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
@@ -60,7 +60,7 @@ spec:
           httpGet:
             path: /api/tags
             port: 11434
-          initialDelaySeconds: 45
+          initialDelaySeconds: 60
           periodSeconds: 5
           timeoutSeconds: 3
 ---
@@ -96,7 +96,7 @@ spec:
       topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: DoNotSchedule
+        whenUnsatisfiable: ScheduleAnyway
         labelSelector:
           matchLabels:
             ensemble: opus-ai-system
@@ -118,16 +118,16 @@ spec:
           value: "0.0.0.0"
         resources:
           requests:
-            memory: "1Gi"
-            cpu: "400m"
+            memory: "512Mi"
+            cpu: "200m"
           limits:
-            memory: "2Gi"
-            cpu: "900m"
+            memory: "4Gi"
+            cpu: "1000m"
         livenessProbe:
           httpGet:
             path: /api/tags
             port: 11434
-          initialDelaySeconds: 60
+          initialDelaySeconds: 120
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
@@ -135,7 +135,7 @@ spec:
           httpGet:
             path: /api/tags
             port: 11434
-          initialDelaySeconds: 45
+          initialDelaySeconds: 60
           periodSeconds: 5
           timeoutSeconds: 3
 ---
@@ -171,7 +171,7 @@ spec:
       topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: DoNotSchedule
+        whenUnsatisfiable: ScheduleAnyway
         labelSelector:
           matchLabels:
             ensemble: opus-ai-system
@@ -193,16 +193,16 @@ spec:
           value: "0.0.0.0"
         resources:
           requests:
-            memory: "1Gi"
-            cpu: "400m"
+            memory: "512Mi"
+            cpu: "200m"
           limits:
-            memory: "2Gi"
-            cpu: "900m"
+            memory: "4Gi"
+            cpu: "1000m"
         livenessProbe:
           httpGet:
             path: /api/tags
             port: 11434
-          initialDelaySeconds: 60
+          initialDelaySeconds: 120
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
@@ -210,7 +210,7 @@ spec:
           httpGet:
             path: /api/tags
             port: 11434
-          initialDelaySeconds: 45
+          initialDelaySeconds: 60
           periodSeconds: 5
           timeoutSeconds: 3
 ---
@@ -246,7 +246,7 @@ spec:
       topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: DoNotSchedule
+        whenUnsatisfiable: ScheduleAnyway
         labelSelector:
           matchLabels:
             ensemble: opus-ai-system
@@ -268,16 +268,16 @@ spec:
           value: "0.0.0.0"
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "250m"
+            memory: "256Mi"
+            cpu: "100m"
           limits:
-            memory: "1.5Gi"
-            cpu: "600m"
+            memory: "4Gi"
+            cpu: "1000m"
         livenessProbe:
           httpGet:
             path: /api/tags
             port: 11434
-          initialDelaySeconds: 60
+          initialDelaySeconds: 120
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
@@ -285,7 +285,7 @@ spec:
           httpGet:
             path: /api/tags
             port: 11434
-          initialDelaySeconds: 45
+          initialDelaySeconds: 60
           periodSeconds: 5
           timeoutSeconds: 3
 ---
@@ -321,7 +321,7 @@ spec:
       topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: DoNotSchedule
+        whenUnsatisfiable: ScheduleAnyway
         labelSelector:
           matchLabels:
             ensemble: opus-ai-system
@@ -343,16 +343,16 @@ spec:
           value: "0.0.0.0"
         resources:
           requests:
-            memory: "1Gi"
-            cpu: "400m"
+            memory: "512Mi"
+            cpu: "200m"
           limits:
-            memory: "2Gi"
-            cpu: "900m"
+            memory: "4Gi"
+            cpu: "1000m"
         livenessProbe:
           httpGet:
             path: /api/tags
             port: 11434
-          initialDelaySeconds: 60
+          initialDelaySeconds: 120
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
@@ -360,7 +360,7 @@ spec:
           httpGet:
             path: /api/tags
             port: 11434
-          initialDelaySeconds: 45
+          initialDelaySeconds: 60
           periodSeconds: 5
           timeoutSeconds: 3
 ---
@@ -381,22 +381,22 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: opus-orchestrator
+  name: orchestrator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: opus-orchestrator
+      app: orchestrator
   template:
     metadata:
       labels:
-        app: opus-orchestrator
+        app: orchestrator
         ensemble: opus-ai-system
     spec:
       topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: DoNotSchedule
+        whenUnsatisfiable: ScheduleAnyway
         labelSelector:
           matchLabels:
             ensemble: opus-ai-system
@@ -407,7 +407,6 @@ spec:
             - matchExpressions:
               - key: node-role.kubernetes.io/control-plane
                 operator: DoesNotExist
-      restartPolicy: Always
       initContainers:
       - name: wait-for-services
         image: curlimages/curl:latest
@@ -443,12 +442,10 @@ spec:
             sleep 5; 
           done
           
-          echo "All model services responding! Giving models 30s more to fully load..."
-          sleep 30
-          echo "Ready to start opus asyncio orchestrator!"
+          echo "All model services responding!"
       containers:
       - name: final-script-orchestrator
-        image: sebastein/final_script:v5.0
+        image: sebastein/final_script:v7.0
         imagePullPolicy: Always
         stdin: true
         tty: true
@@ -457,8 +454,19 @@ spec:
             memory: "128Mi"
             cpu: "100m"
           limits:
-            memory: "256Mi"
-            cpu: "200m"
+            memory: "4Gi"
+            cpu: "1000m"
         env:
         - name: PYTHONUNBUFFERED
           value: "1"
+        # Add a liveness probe to prevent restarts
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import sys; sys.exit(0)"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
